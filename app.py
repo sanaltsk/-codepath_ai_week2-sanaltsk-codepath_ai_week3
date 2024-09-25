@@ -61,19 +61,24 @@ async def on_message(message: cl.Message):
 
     try:
         function_call = json.loads(response_message.content)
-        if "function" in function_call:
-            if function_call["function"]=="get_now_playing_movies":
-                current_movies = get_now_playing_movies()
-                message_history.append({"role": "system", "content":  f"Result of get_now_playing_movies:{current_movies}"})
-                response_message = await generate_response(client, message_history, gen_kwargs)
-            elif function_call["function"]=="get_showtimes":
-                show_times = get_showtimes(function_call["title"], function_call["location"])
-                message_history.append({"role": "system", "content":  f"Result of get_showtimes:{show_times}"})
-                response_message = await generate_response(client, message_history, gen_kwargs)
-            elif function_call["function"] == "get_reviews":
-                review = get_reviews(function_call["movie_id"])
-                message_history.append({"role": "system", "content": f"Result of get_reviews:{review}"})
-                response_message = await generate_response(client, message_history, gen_kwargs)
+        while function_call:
+            if "function" in function_call:
+                if function_call["function"] == "get_now_playing_movies":
+                    current_movies = get_now_playing_movies()
+                    message_history.append(
+                        {"role": "system", "content": f"Result of get_now_playing_movies:{current_movies}"})
+                    response_message = await generate_response(client, message_history, gen_kwargs)
+                elif function_call["function"] == "get_showtimes":
+                    show_times = get_showtimes(function_call["title"], function_call["location"])
+                    message_history.append({"role": "system", "content": f"Result of get_showtimes:{show_times}"})
+                    response_message = await generate_response(client, message_history, gen_kwargs)
+                elif function_call["function"] == "get_reviews":
+                    review = get_reviews(function_call["movie_id"])
+                    message_history.append({"role": "system", "content": f"Result of get_reviews:{review}"})
+                    response_message = await generate_response(client, message_history, gen_kwargs)
+                if "function" not in str(response_message.content):
+                    break
+                function_call = json.loads(response_message.content)
     except:
         print("error")
     message_history.append({"role": "assistant", "content": response_message.content})
