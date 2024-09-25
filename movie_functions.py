@@ -2,7 +2,23 @@ import os
 import requests
 from serpapi import GoogleSearch
 import os
+reservations=[]
+def book_ticket_for_movie(movie_id,location,threatre,show_time):
+    if not movie_id:
+        return f"Missing movieid"
+    if not location:
+        return f"Missing location"
+    if not threatre:
+        return f"Missing threatre"
+    if not show_time:
+        return f"Missing show_time"
+    reservations.append([movie_id,location,threatre,show_time])
+    return f"Ticket booked for {[movie_id,location,threatre,show_time]}"
 
+def cancel_ticket_for_movie(movie_id,location,threatre,show_time):
+    if [movie_id,location,threatre,show_time] in reservations:
+        return f"Ticket Cancelled!"
+    return f"Ticket for {[movie_id,location,threatre,show_time]} not found"
 
 def get_now_playing_movies():
     url = "https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1"
