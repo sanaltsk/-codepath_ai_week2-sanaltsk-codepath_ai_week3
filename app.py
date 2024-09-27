@@ -2,7 +2,7 @@ import json
 
 from dotenv import load_dotenv
 import chainlit as cl
-from movie_functions import get_now_playing_movies, get_showtimes,get_reviews
+from movie_functions import get_now_playing_movies, get_showtimes,get_reviews,cancel_ticket_for_movie,book_ticket_for_movie
 load_dotenv()
 
 # Note: If switching to LangSmith, uncomment the following, and replace @observe with @traceable
@@ -29,6 +29,10 @@ When asked about current movies playing, you will create a message formatted as
 { "function": "get_now_playing_movies"}
 When asked about the reviews for a movie, you will create a message formatted as
 { "function": "get_reviews", "movie_id": "movieId" }
+When asked about booking particular showtime for a movie, you will create a message formatted as
+{ "function": "book_ticket_for_movie", "movie_id": "movieId", "location":"location","theater","theatre","show_time","showtime"}
+When asked about cancelling the booking, you will create a message formatted as
+{ "function": "cancel_ticket_for_movie", "movie_id": "movieId", "location":"location","theater","theatre","show_time","showtime"}
 """
 
 @observe
@@ -67,20 +71,27 @@ async def on_message(message: cl.Message):
                     current_movies = get_now_playing_movies()
                     message_history.append(
                         {"role": "system", "content": f"Result of get_now_playing_movies:{current_movies}"})
-                    response_message = await generate_response(client, message_history, gen_kwargs)
                 elif function_call["function"] == "get_showtimes":
                     show_times = get_showtimes(function_call["title"], function_call["location"])
                     message_history.append({"role": "system", "content": f"Result of get_showtimes:{show_times}"})
-                    response_message = await generate_response(client, message_history, gen_kwargs)
                 elif function_call["function"] == "get_reviews":
                     review = get_reviews(function_call["movie_id"])
                     message_history.append({"role": "system", "content": f"Result of get_reviews:{review}"})
-                    response_message = await generate_response(client, message_history, gen_kwargs)
+                elif function_call["function"] == "book_ticket_for_movie":
+                    book_ticket = book_ticket_for_movie(function_call["movie_id"],function_call["location"],function_call["theater"],function_call["show_time"])
+                    message_history.append({"role": "system", "content": f"Result of book_ticket_for_movie:{book_ticket}"})
+                elif function_call["function"] == "cancel_ticket_for_movie":
+                    cancel_ticket = cancel_ticket_for_movie(function_call["movie_id"],function_call["location"],function_call["theater"],function_call["show_time"])
+                    message_history.append({"role": "system", "content": f"Result of cancel_ticket_for_movie:{cancel_ticket}"})
+                else:
+                    message_history.append(
+                        {"role": "system", "content": f"Invalid action requested"})
+                response_message = await generate_response(client, message_history, gen_kwargs)
                 if "function" not in str(response_message.content):
                     break
                 function_call = json.loads(response_message.content)
     except:
-        print("error")
+        print("Not a function call",response_message.content)
     message_history.append({"role": "assistant", "content": response_message.content})
     cl.user_session.set("message_history", message_history)
 
